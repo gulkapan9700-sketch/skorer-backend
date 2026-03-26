@@ -1,18 +1,19 @@
-import fetch from 'node-fetch';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+dotenv.config();
 
-app.get('/debug', async (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  const r = await fetch(`https://sofascore.p.rapidapi.com/api/v1/sport/football/scheduled-events/${today}`, {
-    headers: {
-      'x-rapidapi-key': process.env.RAPID_API_KEY,
-      'x-rapidapi-host': 'sofascore.p.rapidapi.com'
-    }
-  });
-  const j = await r.json();
-  res.json(j);
-});
-```
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-Commit'le, deploy bekle, sonra şunu aç:
-```
-https://skorer-backend-q44o.onrender.com/debug
+import footballRoutes from './routes/football.js';
+import basketRoutes from './routes/basket.js';
+
+app.use('/fb', footballRoutes);
+app.use('/bb', basketRoutes);
+
+app.get('/', (req, res) => res.send('✅ SKORER Backend Çalışıyor'));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('✅ Backend aktif PORT: ' + PORT));
