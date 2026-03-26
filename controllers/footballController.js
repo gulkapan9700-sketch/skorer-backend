@@ -4,68 +4,104 @@ const HOST = 'sofascore.p.rapidapi.com';
 const BASE = 'https://sofascore.p.rapidapi.com';
 const KEY = process.env.RAPID_API_KEY;
 
+// 🔥 TÜM API çağrıları buradan geçiyor
 async function apiCall(path) {
-  const r = await fetch(`${BASE}/${path}`, {
-    headers: {
-      'x-rapidapi-key': KEY,
-      'x-rapidapi-host': HOST
+  try {
+    const response = await fetch(`${BASE}/${path}`, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': KEY,
+        'x-rapidapi-host': HOST
+      }
+    });
+
+    const text = await response.text();
+
+    // DEBUG (çok önemli)
+    console.log("API RESPONSE:", text.substring(0, 200));
+
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error("JSON parse hatası:", text);
+      return { events: [] };
     }
-  });
-  return await r.json();
+
+  } catch (err) {
+    console.error("FETCH HATASI:", err);
+    return { events: [] };
+  }
 }
 
-// Canlı maçlar - futbol categoryId=1
+// 🔴 CANLI MAÇLAR
 export const getLive = async (req, res) => {
   try {
     const data = await apiCall('api/v1/sport/football/events/live');
-    res.json(data?.events ?? []);
+    return res.status(200).json(data?.events || []);
   } catch (e) {
-    res.json([]);
+    console.error(e);
+    return res.status(500).json([]);
   }
 };
 
-// Bugünkü maçlar
+// 📅 BUGÜNKÜ MAÇLAR
 export const getToday = async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const data = await apiCall(`api/v1/sport/football/scheduled-events/${today}`);
-    res.json(data?.events ?? []);
+
+    const data = await apiCall(`api/v1/sport/football/events/date/${today}`);
+
+    return res.status(200).json(data?.events || []);
   } catch (e) {
-    res.json([]);
+    console.error(e);
+    return res.status(500).json([]);
   }
 };
 
-// Maç detayı
+// 📊 MAÇ DETAYI
 export const getFixture = async (req, res) => {
   try {
-    const data = await apiCall(`api/v1/event/${req.params.id}`);
-    res.json(data?.event ? [data.event] : []);
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json([]);
+
+    const data = await apiCall(`api/v1/event/${id}`);
+
+    return res.status(200).json(data?.event ? [data.event] : []);
   } catch (e) {
-    res.json([]);
+    console.error(e);
+    return res.status(500).json([]);
   }
 };
 
-// Maç istatistikleri
+// 💰 ORANLAR
 export const getOdds = async (req, res) => {
   try {
-    const data = await apiCall(`api/v1/event/${req.params.id}/odds/1/all`);
-    res.json(data ?? {});
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({});
+
+    const data = await apiCall(`api/v1/event/${id}/odds/1/all`);
+
+    return res.status(200).json(data || {});
   } catch (e) {
-    res.json({});
+    console.error(e);
+    return res.status(500).json({});
   }
 };
 
-// Maç olayları (goller, kartlar)
+// ⚽ MAÇ OLAYLARI (gol, kart)
 export const getPrediction = async (req, res) => {
   try {
-    const data = await apiCall(`api/v1/event/${req.params.id}/incidents`);
-    res.json(data?.incidents ?? []);
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json([]);
+
+    const data = await apiCall(`api/v1/event/${id}/incidents`);
+
+    return res.status(200).json(data?.incidents || []);
   } catch (e) {
-    res.json([]);
+    console.error(e);
+    return res.status(500).json([]);
   }
 };
-```
-
-Commit'le ve deploy bekle. Sonra şunu test edelim:
-```
-https://skorer-backend-q44o.onrender.com/fb/today
