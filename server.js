@@ -1,9 +1,7 @@
 app.get("/fb/today", async (req, res) => {
   try {
-    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-
     const response = await axios.get(
-      `https://sofascore.p.rapidapi.com/v1/sport/football/scheduled-events/${today}`,
+      "https://sofascore.p.rapidapi.com/v1/sport/football/events/live",
       {
         headers: {
           "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
@@ -12,7 +10,7 @@ app.get("/fb/today", async (req, res) => {
       }
     );
 
-    console.log("API RESPONSE:", response.data);
+    console.log("LIVE DATA:", JSON.stringify(response.data, null, 2));
 
     const events =
       response.data?.data?.events ||
