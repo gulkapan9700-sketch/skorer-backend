@@ -1,19 +1,27 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-dotenv.config();
+app.get("/fb/today", async (req, res) => {
+  try {
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+    const response = await axios.get(
+      `https://sofascore.p.rapidapi.com/v1/sport/football/scheduled-events/${today}`,
+      {
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+          "X-RapidAPI-Host": "sofascore.p.rapidapi.com",
+        },
+      }
+    );
 
-import footballRoutes from './routes/football.js';
-import basketRoutes from './routes/basket.js';
+    console.log("API RESPONSE:", response.data);
 
-app.use('/fb', footballRoutes);
-app.use('/bb', basketRoutes);
+    const events =
+      response.data?.data?.events ||
+      response.data?.events ||
+      [];
 
-app.get('/', (req, res) => res.send('✅ SKORER Backend Çalışıyor'));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('✅ Backend aktif PORT: ' + PORT));
+    res.json(events);
+  } catch (err) {
+    console.error("HATA:", err.response?.data || err.message);
+    res.status(500).json({ error: "Veri çekilemedi" });
+  }
+});
