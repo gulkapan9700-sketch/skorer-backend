@@ -51,10 +51,10 @@ export const getToday = async (req, res) => {
 
     const data = await apiCall(`api/v1/sport/football/events/date/${today}`);
 
-    return res.status(200).json(data?.events || []);
+    return res.json(data); // 🔥 direkt data dön
   } catch (e) {
-    console.error(e);
-    return res.status(500).json([]);
+    console.error("HATA:", e);
+    return res.status(500).json({ error: e.message });
   }
 };
 
